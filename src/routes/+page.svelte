@@ -316,7 +316,7 @@
 
 	.big-temp {
 		font-size: 180px;
-		font-weight: 200;
+		font-weight: 300;
 		line-height: 0.9;
 		margin-bottom: 20px;
 		position: relative;
