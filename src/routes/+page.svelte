@@ -187,7 +187,6 @@
 					placeholder="Search city or country..." 
 					bind:value={searchQuery} 
 					oninput={performSearch}
-					autofocus
 				/>
 				<button onclick={() => showSearch = false} class="close-btn"><X size={20}/></button>
 			</div>

@@ -18,7 +18,7 @@
 		size?: number;
 	}>();
 
-	const iconMap: Record<number, any> = {
+	const iconMap = $derived<Record<number, any>>({
 		0: isDay ? Sun : Moon,
 		1: isDay ? CloudSun : CloudMoon,
 		2: isDay ? CloudSun : CloudMoon,
@@ -38,7 +38,7 @@
 		81: CloudRain,
 		82: CloudRain,
 		95: CloudLightning
-	};
+	});
 
 	const Icon = $derived(iconMap[code] || Cloud);
 </script>
