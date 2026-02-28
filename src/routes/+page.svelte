@@ -276,7 +276,7 @@
 		gap: 20px;
 		align-items: center;
 		color: var(--text-muted);
-		font-size: 12px;
+		font-size: 14px;
 		margin-bottom: 40px;
 	}
 
