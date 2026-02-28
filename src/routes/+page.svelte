@@ -2,62 +2,49 @@
 	import { onMount } from 'svelte';
 	import { getWeatherData, type WeatherData, getWeatherDescription } from '$lib/weather';
 	import WeatherIcon from '$lib/components/WeatherIcon.svelte';
+	import WeatherStat from '$lib/components/WeatherStat.svelte';
+	import SidebarItem from '$lib/components/SidebarItem.svelte';
+	import SearchResult from '$lib/components/SearchResult.svelte';
 	import { 
-		Wind, 
-		Droplets, 
-		MapPin, 
-		ChevronDown,
-		Search,
 		X
 	} from 'lucide-svelte';
 	import { browser } from '$app/environment';
 	import {
 		Chart,
-		Title,
-		Tooltip,
-		Legend,
 		LineElement,
 		LinearScale,
 		PointElement,
 		CategoryScale,
-		Filler,
 		LineController
 	} from 'chart.js';
 
 	if (browser) {
 		Chart.register(
-			Title,
-			Tooltip,
-			Legend,
 			LineElement,
 			LinearScale,
 			PointElement,
 			CategoryScale,
-			Filler,
 			LineController
 		);
 	}
 
 	let weather = $state<WeatherData | null>(null);
 	let loading = $state(true);
-	let error = $state<string | null>(null);
 	let location = $state({ lat: 40.71, lon: -74.00, name: 'Brooklyn, New York, USA' });
 	
 	let showSearch = $state(false);
 	let searchQuery = $state('');
 	let searchResults = $state<any[]>([]);
-	let searching = $state(false);
 
 	let canvas: HTMLCanvasElement | null = $state(null);
 	let chart: Chart | null = null;
 
 	async function fetchWeather() {
 		loading = true;
-		error = null;
 		try {
 			weather = await getWeatherData(location.lat, location.lon);
 		} catch (e: any) {
-			error = e.message;
+			console.error("Fetch failed", e);
 		} finally {
 			loading = false;
 		}
@@ -65,15 +52,12 @@
 
 	async function performSearch() {
 		if (searchQuery.length < 2) return;
-		searching = true;
 		try {
 			const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(searchQuery)}&count=5&language=en&format=json`);
 			const data = await res.json();
 			searchResults = data.results || [];
 		} catch (e) {
 			console.error("Search failed", e);
-		} finally {
-			searching = false;
 		}
 	}
 
@@ -132,9 +116,10 @@
 						x: {
 							grid: { display: false },
 							ticks: { 
-								color: '#444', 
+								color: (c) => (c.index === 1 ? '#fff' : '#444'),
 								font: { size: 11 },
 								callback: function(val, index) {
+									if (index === 1) return '';
 									return this.getLabelForValue(val as number);
 								}
 							}
@@ -155,10 +140,15 @@
 							ctx.fillText(Math.round(datapoint as number) + '°', point.x, point.y - 20);
 							
 							if (index === 1) {
-								ctx.fillStyle = 'rgba(255,255,255,0.05)';
+								ctx.fillStyle = 'rgba(255,255,255,0.08)';
 								ctx.beginPath();
-								ctx.roundRect(point.x - 25, chart.height - 30, 50, 22, 4);
+								ctx.roundRect(point.x - 25, chart.height - 32, 50, 22, 6);
 								ctx.fill();
+								
+								// Redraw the time label in white for better visibility
+								ctx.fillStyle = '#fff';
+								ctx.font = '300 11px Inter';
+								ctx.fillText(data.labels?.[index] as string || '', point.x, chart.height - 17);
 							}
 						});
 					}
@@ -181,7 +171,6 @@
 	{#if showSearch}
 		<div class="search-overlay glass-card">
 			<div class="search-box">
-				<Search size={20} color="#666" />
 				<input 
 					type="text" 
 					placeholder="Search city or country..." 
@@ -192,13 +181,11 @@
 			</div>
 			<div class="results">
 				{#each searchResults as res}
-					<button class="result-row" onclick={() => selectLocation(res)}>
-						<MapPin size={16} />
-						<div class="res-info">
-							<span class="res-name">{res.name}</span>
-							<span class="res-meta">{res.admin1 || ''}, {res.country}</span>
-						</div>
-					</button>
+					<SearchResult 
+						name={res.name} 
+						meta={`${res.admin1 || ''}, ${res.country}`} 
+						onclick={() => selectLocation(res)} 
+					/>
 				{/each}
 			</div>
 		</div>
@@ -211,12 +198,10 @@
 	{:else if weather}
 		<header class="top-nav">
 			<button class="location" onclick={() => showSearch = true}>
-				<MapPin size={14} />
 				<span>{location.name}</span>
-				<ChevronDown size={14} />
 			</button>
 			<div class="date">
-				({formatDate()})
+				{formatDate()}
 			</div>
 		</header>
 
@@ -230,16 +215,8 @@
 						{getWeatherDescription(weather.current.weatherCode)}
 					</div>
 					<div class="quick-stats">
-						<div class="stat">
-							<Wind size={14} color="#666" />
-							<div class="stat-label">Wind</div>
-							<div class="stat-value">{weather.current.windSpeed}km/h</div>
-						</div>
-						<div class="stat">
-							<Droplets size={14} color="#666" />
-							<div class="stat-label">Humidity</div>
-							<div class="stat-value">{weather.current.humidity}%</div>
-						</div>
+						<WeatherStat label="Wind" value={`${weather.current.windSpeed}km/h`} />
+						<WeatherStat label="Humidity" value={`${weather.current.humidity}%`} />
 					</div>
 				</div>
 
@@ -253,16 +230,13 @@
 			<aside class="sidebar glass-card">
 				<div class="sidebar-list">
 					{#each weather.daily.slice(0, 6) as day, i}
-						<div class="sidebar-item" class:active={i === 0}>
-							<div class="day-icon">
-								<WeatherIcon code={day.weatherCode} size={20} />
-							</div>
-							<div class="day-info">
-								<div class="day-name">{formatDay(day.date)}</div>
-								<div class="day-desc">{getWeatherDescription(day.weatherCode)}</div>
-							</div>
-							<div class="day-temp">{Math.round(day.maxTemp)}°</div>
-						</div>
+						<SidebarItem 
+							active={i === 0}
+							code={day.weatherCode}
+							name={formatDay(day.date)}
+							description={getWeatherDescription(day.weatherCode)}
+							temp={Math.round(day.maxTemp)}
+						/>
 					{/each}
 				</div>
 			</aside>
@@ -323,8 +297,9 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: flex-start;
-		height: 340px;
+		min-height: 340px;
 		transition: opacity 0.3s;
+		gap: 40px;
 	}
 
 	.dimmed {
@@ -370,18 +345,6 @@
 		gap: 60px;
 	}
 
-	.stat-label {
-		font-size: 12px;
-		color: #555;
-		text-transform: uppercase;
-		margin-top: 8px;
-	}
-
-	.stat-value {
-		font-size: 24px;
-		font-weight: 400;
-	}
-
 	.hero-illustration {
 		position: relative;
 		display: flex;
@@ -392,68 +355,24 @@
 	.sidebar {
 		width: 320px;
 		padding: 30px 0;
-	}
-
-	.sidebar-item {
-		display: flex;
-		align-items: center;
-		padding: 18px 30px;
-		gap: 20px;
-		transition: all 0.3s;
-		opacity: 0.6;
-	}
-
-	.sidebar-item.active {
-		opacity: 1;
-		position: relative;
-	}
-
-	.sidebar-item.active::before {
-		content: '';
-		position: absolute;
-		left: 0;
-		top: 50%;
-		transform: translateY(-50%);
-		width: 4px;
-		height: 24px;
-		background-color: var(--accent);
-		border-radius: 0 4px 4px 0;
-	}
-
-	.day-name {
-		font-size: 16px;
-		font-weight: 500;
-	}
-
-	.day-desc {
-		font-size: 12px;
-		color: var(--text-muted);
-	}
-
-	.day-temp {
-		margin-left: auto;
-		font-weight: 400;
-		font-size: 16px;
+		flex-shrink: 0;
 	}
 
 	.bottom-section {
-		position: absolute;
-		bottom: 40px;
-		left: 60px;
-		right: 60px;
+		margin-top: auto;
+		padding-top: 60px;
+		padding-bottom: 40px;
 		display: flex;
 		align-items: flex-end;
 		justify-content: space-between;
-		height: 120px;
+		height: 200px;
+		width: 100%;
 	}
 
 	.hourly-chart {
 		flex: 1;
 		height: 100%;
-	}
-
-	.main-weather-icon {
-		filter: drop-shadow(0 0 30px rgba(255, 204, 0, 0.2));
+		min-height: 150px;
 	}
 
 	.search-overlay {
@@ -461,10 +380,99 @@
 		top: 40px;
 		left: 50%;
 		transform: translateX(-50%);
-		width: 500px;
+		width: 90%;
+		max-width: 500px;
 		z-index: 1000;
 		padding: 20px;
 		box-shadow: 0 50px 100px rgba(0,0,0,0.9);
+	}
+
+	@media (max-width: 1200px) {
+		.hero {
+			padding-right: 0;
+		}
+		
+		.big-temp {
+			font-size: 140px;
+		}
+		
+		.condition {
+			font-size: 36px;
+		}
+	}
+
+	@media (max-width: 900px) {
+		.main-layout {
+			flex-direction: column;
+			align-items: center;
+			height: auto;
+		}
+
+		.hero {
+			width: 100%;
+			flex-direction: column-reverse;
+			text-align: center;
+			gap: 40px;
+		}
+
+		.temp-display {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
+
+		.big-temp {
+			font-size: 120px;
+			margin-bottom: 10px;
+		}
+
+		.degree {
+			font-size: 40px;
+			right: -35px;
+		}
+
+		.condition {
+			font-size: 28px;
+			margin-bottom: 30px;
+		}
+
+		.quick-stats {
+			gap: 40px;
+		}
+
+		.sidebar {
+			width: 100%;
+			max-width: 400px;
+		}
+
+		.bottom-section {
+			margin-top: 40px;
+			height: 180px;
+		}
+	}
+
+	@media (max-width: 480px) {
+		.big-temp {
+			font-size: 100px;
+		}
+
+		.degree {
+			font-size: 30px;
+			right: -25px;
+		}
+
+		.condition {
+			font-size: 24px;
+		}
+
+		.quick-stats {
+			gap: 30px;
+		}
+
+		.top-nav {
+			flex-direction: column;
+			gap: 10px;
+		}
 	}
 
 	.search-box {
@@ -496,39 +504,5 @@
 		margin-top: 20px;
 		max-height: 300px;
 		overflow-y: auto;
-	}
-
-	.result-row {
-		width: 100%;
-		display: flex;
-		align-items: center;
-		gap: 15px;
-		padding: 12px;
-		background: none;
-		border: none;
-		color: #fff;
-		text-align: left;
-		cursor: pointer;
-		border-radius: 12px;
-		transition: background 0.2s;
-	}
-
-	.result-row:hover {
-		background: rgba(255,255,255,0.05);
-	}
-
-	.res-info {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.res-name {
-		font-size: 14px;
-		font-weight: 500;
-	}
-
-	.res-meta {
-		font-size: 11px;
-		color: #555;
 	}
 </style>
