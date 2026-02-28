@@ -1,11 +1,19 @@
 <script lang="ts">
 	import WeatherIcon from './WeatherIcon.svelte';
 
+	/**
+	 * Renders a sidebar item for the daily weather forecast.
+	 */
 	let { active, code, name, description, temp } = $props<{
+		/** Indicates if this item is currently selected. */
 		active: boolean;
+		/** WMO weather interpretation code. */
 		code: number;
+		/** Name of the day. */
 		name: string;
+		/** Descriptive weather condition. */
 		description: string;
+		/** Temperature value in Celsius. */
 		temp: number;
 	}>();
 </script>

@@ -12,9 +12,15 @@
 		CloudMoon
 	} from 'lucide-svelte';
 
+	/**
+	 * Displays an appropriate weather icon based on the WMO weather code.
+	 */
 	let { code, isDay = true, size = 24 } = $props<{
+		/** WMO weather interpretation code. */
 		code: number;
+		/** Indicates if it's daytime for sun/moon variation. */
 		isDay?: boolean;
+		/** Size of the icon in pixels. */
 		size?: number;
 	}>();
 

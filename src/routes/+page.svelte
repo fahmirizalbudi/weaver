@@ -145,7 +145,6 @@
 								ctx.roundRect(point.x - 25, chart.height - 32, 50, 22, 6);
 								ctx.fill();
 								
-								// Redraw the time label in white for better visibility
 								ctx.fillStyle = '#fff';
 								ctx.font = '300 11px Inter';
 								ctx.fillText(data.labels?.[index] as string || '', point.x, chart.height - 17);

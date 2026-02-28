@@ -1,7 +1,13 @@
 <script lang="ts">
+	/**
+	 * Renders a single location search result.
+	 */
 	let { name, meta, onclick } = $props<{
+		/** Name of the location. */
 		name: string;
+		/** Metadata like country or administrative region. */
 		meta: string;
+		/** Event handler for selecting the location. */
 		onclick: () => void;
 	}>();
 </script>

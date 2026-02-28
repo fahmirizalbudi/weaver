@@ -2,7 +2,39 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
+		<link rel="icon" href="%sveltekit.assets%/favicon.ico" sizes="48x48" />
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>Weaver - Modern Weather Application</title>
+		<meta name="description" content="Weaver is a modern, minimalist weather application developed by Fahmirizal Budi Ramadhan. Built with SvelteKit and Chart.js." />
+		<meta name="author" content="Fahmirizal Budi Ramadhan" />
+		<meta name="keywords" content="Weaver, Weather App, Fahmirizal Budi Ramadhan, SvelteKit Weather, Minimalist Weather Dashboard" />
+		
+		<!-- Open Graph / Facebook -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="Weaver - Modern Weather Application" />
+		<meta property="og:description" content="Weaver is a modern, minimalist weather application developed by Fahmirizal Budi Ramadhan." />
+		<meta property="og:image" content="%sveltekit.assets%/favicon.svg" />
+
+		<!-- Twitter -->
+		<meta property="twitter:card" content="summary" />
+		<meta property="twitter:title" content="Weaver - Modern Weather Application" />
+		<meta property="twitter:description" content="Weaver is a modern, minimalist weather application developed by Fahmirizal Budi Ramadhan." />
+		<meta property="twitter:image" content="%sveltekit.assets%/favicon.svg" />
+
+		<script type="application/ld+json">
+		{
+			"@context": "https://schema.org",
+			"@type": "SoftwareApplication",
+			"name": "Weaver",
+			"operatingSystem": "Web",
+			"applicationCategory": "WeatherApplication",
+			"author": {
+				"@type": "Person",
+				"name": "Fahmirizal Budi Ramadhan"
+			},
+			"description": "A modern, minimalist weather application."
+		}
+		</script>
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

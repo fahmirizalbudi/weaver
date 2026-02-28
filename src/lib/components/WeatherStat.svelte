@@ -1,6 +1,11 @@
 <script lang="ts">
+	/**
+	 * Displays a weather statistic with a label and value.
+	 */
 	let { label, value } = $props<{
+		/** The name of the statistic. */
 		label: string;
+		/** The value of the statistic. */
 		value: string | number;
 	}>();
 </script>
